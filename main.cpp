@@ -3,20 +3,17 @@
 #include "qclkernel.h"
 #include <ctime>
 #include "iostream"
+#include <math.h>
 using namespace std;
 
 #define GPU 0
 #define CPU 1
 
-void affichMatrice(){
-
-}
 
 int main(int argc, char *argv[])
 {    
 
-
-    // Declarations
+    // Declarations+-
     QCLContext context;
     QCLProgram program;
     QCLKernel kernel;
@@ -31,39 +28,36 @@ int main(int argc, char *argv[])
         mode = ( strcmp(argv[1],"-gpu") == 0)?GPU:mode;
     }
 
-    //matrice donnée
-    int **A = new int*[N];
-    //matrice donnée
-    int **B = new int*[N];
-    //matrice résultat
-    int **C = new int*[N];
 
-    //création des matrices
-    for (int i = 0; i < N; ++i) {
-        A[i] = new int[N];
-        B[i] = new int[N];
-        C[i] = new int[N];
-        for (int j = 0; j < N; ++j) {
-            A[i][j] = 1;
-            B[i][j] = 1;
+    int *indata1=new int[N*N];
+    int *indata2=new int[N*N];
+    int *outdata=new int[N*N];
+
+    //initialisation des matrices
+        for(int i=0; i<N; i++){
+            for(int j=0; j<N; j++){
+                indata1[(i*N)+j]=1;
+                indata2[(i*N)+j]=1;
+            }
         }
-    }
 
     if (mode == CPU) {
         cout<<"Multiplication en mode CPU"<<endl;
+
         clock_t    timer;
         timer = clock();
+
         //multiplication de AxB
-        for (int i = 0; i < N; ++i) {
-            for (int j = 0; j < N; ++j) {
-                C[i][j]=0;
-                for (int k = 0; k < N; ++k) {
-                    C[i][j] += A[i][k]*B[k][j];
+            for (int i = 0; i< N; ++i) {
+                for(int j=0;j<N; j++){
+                    outdata[(i*N)+j] = 0;
+                    for(int k=0; k<N; k++){
+                        outdata[(i*N)+j] += indata1[(i*N)+k]*indata2[(k*N)+j];
+                    }
                 }
             }
-        }
-        cout << "Timer CPU: " << (clock() - timer) / (double)(CLOCKS_PER_SEC / 1000) << " ms" <<endl;
 
+        cout << "Timer CPU: " << (clock() - timer) / (double)(CLOCKS_PER_SEC / 1000) << " ms" <<endl;
 
     }else{
         if(!context.create()){
@@ -83,70 +77,35 @@ int main(int argc, char *argv[])
         kernel.setArg(3,N);
 
         cout<<"Multiplication en mode GPU"<<endl;
-        int *indataA = new int[N*N];
-        int *indataB = new int[N*N];
-        int *outdata = new int[N*N];
 
-        //Mise a plats des matrices
-        int pas =0;
-        for (int i = 0; i <N; i++) {
-            for (int j = 0; j < N; j++) {
-                indataA[pas] = A[i][j];
-                indataB[pas] = B[j][i];
-                pas++;
-            }
-        }
-
-        inbufferA.write(indataA,N*N);
-        inbufferB.write(indataB,N*N);
+        inbufferA.write(indata1,N*N);
+        inbufferB.write(indata2,N*N);
         clock_t    timer;
         timer = clock();
         kernel.run();
+        outbuffer.read(outdata,N*N);
         cout << "Timer GPU: " << (clock() - timer) / (double)(CLOCKS_PER_SEC / 1000) << " ms" <<endl;
 
-        outbuffer.read(outdata,N*N);
 
-        for (int i = 0, pas=0; i < N; ++i) {
-            for(int j=0; j < N; j++,pas++){
-                C[i][j] = outdata[pas];
-            }
-        }
-
-        delete[] indataA;
-        delete[] indataB;
-        delete[] outdata;
     }
-
-    if(N<=5){
-        cout<<"Matrice A"<<endl;
-        for (int i=0; i<N; i++){
-            for (int j = 0; j < N; j++){
-                cout<<A[i][j]<<" ";
+    if(N<11){
+            cout<<endl<<"Matrice A"<<endl;
+            for(int i=0; i<N; i++){
+                for(int j=0; j<N; j++)
+                    cout<<indata1[(i*N)+j]<<" ";
+                cout<<endl;
             }
-            cout<<endl;
-        }
-        cout<<"Matrice B"<<endl;
-        for (int i=0; i<N; i++){
-            for (int j = 0; j < N; j++){
-                cout<<B[i][j]<<" ";
+            cout<<endl<<"Matrice B"<<endl;
+            for(int i=0; i<N; i++){
+                for(int j=0; j<N; j++)
+                    cout<<indata2[(i*N)+j]<<" ";
+                cout<<endl;
             }
-            cout<<endl;
-        }
-        cout<<"Matrice C"<<endl;
-        for (int i=0; i<N; i++){
-            for (int j = 0; j < N; j++){
-                cout<<C[i][j]<<" ";
+            cout<<endl<<"Matrice C"<<endl;
+            for(int i=0; i<N; i++){
+                for(int j=0; j<N; j++)
+                    cout<<outdata[(i*N)+j]<<" ";
+                cout<<endl;
             }
-            cout<<endl;
         }
-    }
-
-    for (int i = 0; i < N; i++){
-        delete[] A[i];
-        delete[] B[i];
-        delete[] C[i];
-    }
-    delete[] A;
-    delete[] B;
-    delete[] C;
 }
