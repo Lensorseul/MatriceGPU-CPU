@@ -209,6 +209,17 @@ void printMatrix(vector< vector<int> > matrix) {
     }
 }
 
+void print(int* matrix, int N) {
+    for (int i=0; i < N; i++) {
+        for (int j=0; j < N; j++) {
+            if (j != 0) {
+                cout << " ";
+            }
+            cout << matrix[i*N+j];
+        }
+        cout << endl;
+    }
+}
 
 void strassenRCPU(vector< vector<int> > &A,
                vector< vector<int> > &B,
@@ -360,8 +371,16 @@ int main(int argc, char *argv[])
                 }
             }
         }
+        cout << "Timer CPU: " << (clock() - timer) / (double)(CLOCKS_PER_SEC)<< " s" <<endl;
 
-        cout << "Timer CPU: " << (clock() - timer) / (double)(CLOCKS_PER_SEC)<< " ms" <<endl;
+        if(N<=5){
+            cout<<"Matrice A"<<endl;
+            print(indata1,N);
+            cout<<"Matrice B"<<endl;
+            print(indata2,N);
+            cout<<"Matrice C"<<endl;
+            print(outdata,N);
+        }
 
     }else if(mode== GPU){
         if(!context.create()){
@@ -387,8 +406,17 @@ int main(int argc, char *argv[])
         timer = clock();
         strassen(A,B,C,n);
         cout<<"C [0] "<<C[0][0]<<endl;
-        cout << "Timer CPU: " << (clock() - timer) / (double)(CLOCKS_PER_SEC) << " ms" <<endl;
+        cout << "Timer CPU: " << (clock() - timer) / (double)(CLOCKS_PER_SEC) << " s" <<endl;
 
+
+        if(N<=5){
+            cout<<"Matrice A"<<endl;
+            printMatrix(A);
+            cout<<"Matrice B"<<endl;
+            printMatrix(B);
+            cout<<"Matrice C"<<endl;
+            printMatrix(C);
+        }
 
     }else if(mode==STRASSEN){
         cout<<"Multiplication en mode CPU avec algorithme STRASSEN"<<endl;
@@ -409,9 +437,18 @@ int main(int argc, char *argv[])
         timer = clock();
         strassen(A,B,C,n);
         cout<<"C [0] "<<C[0][0]<<endl;
-        cout << "Timer CPU avec strassen: " << (clock() - timer) / (double)(CLOCKS_PER_SEC) << " ms" <<endl;
+        cout << "Timer CPU avec strassen: " << (clock() - timer) / (double)(CLOCKS_PER_SEC) << " s" <<endl;
 
+        if(N<=5){
+            cout<<"Matrice A"<<endl;
+            printMatrix(A);
+            cout<<"Matrice B"<<endl;
+            printMatrix(B);
+            cout<<"Matrice C"<<endl;
+            printMatrix(C);
+        }
     }
+
 
 
 }
